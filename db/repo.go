@@ -5,23 +5,23 @@ import (
 	"gorm.io/gorm"
 )
 
-// Repository defines CRUD operations for any model T.
+// Repository defines CRUD operations with optional GORM queries.
 type Repository[T any] interface {
 	Create(ctx context.Context, model *T) error
-	GetByID(ctx context.Context, id any) (*T, error)
+	GetByID(ctx context.Context, id any, queryFns ...func(*gorm.DB) *gorm.DB) (*T, error)
 	Update(ctx context.Context, model *T) error
 	Delete(ctx context.Context, id any) error
-	List(ctx context.Context) ([]T, error)
+	List(ctx context.Context, queryFns ...func(*gorm.DB) *gorm.DB) ([]T, error)
 	Async() AsyncRepository[T]
 }
 
-// AsyncRepository defines async versions of CRUD operations.
+// AsyncRepository defines async CRUD operations with optional queries.
 type AsyncRepository[T any] interface {
 	CreateAsync(ctx context.Context, model *T) <-chan error
-	GetByIDAsync(ctx context.Context, id any) <-chan Result[T]
+	GetByIDAsync(ctx context.Context, id any, queryFns ...func(*gorm.DB) *gorm.DB) <-chan Result[T]
 	UpdateAsync(ctx context.Context, model *T) <-chan error
 	DeleteAsync(ctx context.Context, id any) <-chan error
-	ListAsync(ctx context.Context) <-chan Result[[]T]
+	ListAsync(ctx context.Context, queryFns ...func(*gorm.DB) *gorm.DB) <-chan Result[[]T]
 }
 
 // Result wraps data or error for async calls.
@@ -45,10 +45,14 @@ func (r *repository[T]) Create(ctx context.Context, model *T) error {
 	return r.db.WithContext(ctx).Create(model).Error
 }
 
-// GetByID retrieves a record by its primary key.
-func (r *repository[T]) GetByID(ctx context.Context, id any) (*T, error) {
+// GetByID retrieves a record by its primary key with optional query functions.
+func (r *repository[T]) GetByID(ctx context.Context, id any, queryFns ...func(*gorm.DB) *gorm.DB) (*T, error) {
 	var out T
-	err := r.db.WithContext(ctx).First(&out, id).Error
+	q := r.db.WithContext(ctx)
+	for _, fn := range queryFns {
+		q = fn(q)
+	}
+	err := q.First(&out, id).Error
 	return &out, err
 }
 
@@ -62,10 +66,14 @@ func (r *repository[T]) Delete(ctx context.Context, id any) error {
 	return r.db.WithContext(ctx).Delete(new(T), id).Error
 }
 
-// List retrieves all records of type T.
-func (r *repository[T]) List(ctx context.Context) ([]T, error) {
+// List retrieves all records of type T with optional query functions.
+func (r *repository[T]) List(ctx context.Context, queryFns ...func(*gorm.DB) *gorm.DB) ([]T, error) {
 	var out []T
-	err := r.db.WithContext(ctx).Find(&out).Error
+	q := r.db.WithContext(ctx)
+	for _, fn := range queryFns {
+		q = fn(q)
+	}
+	err := q.Find(&out).Error
 	return out, err
 }
 
@@ -87,10 +95,10 @@ func (a *asyncRepository[T]) CreateAsync(ctx context.Context, model *T) <-chan e
 }
 
 // GetByIDAsync retrieves a record by ID in a new goroutine.
-func (a *asyncRepository[T]) GetByIDAsync(ctx context.Context, id any) <-chan Result[T] {
+func (a *asyncRepository[T]) GetByIDAsync(ctx context.Context, id any, queryFns ...func(*gorm.DB) *gorm.DB) <-chan Result[T] {
 	ch := make(chan Result[T], 1)
 	go func() {
-		res, err := a.repo.GetByID(ctx, id)
+		res, err := a.repo.GetByID(ctx, id, queryFns...)
 		var out T
 		if res != nil {
 			out = *res
@@ -115,10 +123,10 @@ func (a *asyncRepository[T]) DeleteAsync(ctx context.Context, id any) <-chan err
 }
 
 // ListAsync retrieves all records in a new goroutine.
-func (a *asyncRepository[T]) ListAsync(ctx context.Context) <-chan Result[[]T] {
+func (a *asyncRepository[T]) ListAsync(ctx context.Context, queryFns ...func(*gorm.DB) *gorm.DB) <-chan Result[[]T] {
 	ch := make(chan Result[[]T], 1)
 	go func() {
-		data, err := a.repo.List(ctx)
+		data, err := a.repo.List(ctx, queryFns...)
 		ch <- Result[[]T]{Data: data, Err: err}
 	}()
 	return ch
