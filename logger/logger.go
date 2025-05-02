@@ -1,4 +1,3 @@
-// Package logger provides a reusable Zap logger with environment-based presets.
 package logger
 
 import (

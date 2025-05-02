@@ -1,11 +1,9 @@
-package config_test
+package config
 
 import (
+	"github.com/stretchr/testify/assert"
 	"os"
 	"testing"
-
-	"github.com/flockstore/mannaiah-shared/config"
-	"github.com/stretchr/testify/assert"
 )
 
 func cleanupEnv(keys ...string) func() {
@@ -20,12 +18,12 @@ func cleanupEnv(keys ...string) func() {
 func TestInitAndGet(t *testing.T) {
 	t.Cleanup(cleanupEnv("MANNAIAH_SERVER_PORT", "MANNAIAH_DEBUG"))
 
-	config.Init("MANNAIAH", map[string]interface{}{
+	Init("MANNAIAH", map[string]interface{}{
 		"server.port": "3000",
 		"debug":       "false",
 	})
 
-	v := config.Get()
+	v := Get()
 	assert.NotNil(t, v, "expected non-nil Viper instance")
 	assert.Equal(t, "3000", v.GetString("server.port"))
 	assert.Equal(t, "false", v.GetString("debug"))
@@ -38,11 +36,11 @@ func TestEnvOverride(t *testing.T) {
 	err := os.Setenv("MANNAIAH_SERVER_PORT", "8080")
 	assert.NoError(t, err)
 
-	config.Init("MANNAIAH", map[string]interface{}{
+	Init("MANNAIAH", map[string]interface{}{
 		"server.port": "3000",
 	})
 
-	port := config.MustGet("server.port")
+	port := MustGet("server.port")
 	assert.Equal(t, "8080", port)
 }
 
@@ -50,10 +48,10 @@ func TestEnvOverride(t *testing.T) {
 func TestMustGetPanics(t *testing.T) {
 	t.Cleanup(cleanupEnv("MANNAIAH_SERVER_PORT"))
 
-	config.Init("MANNAIAH", map[string]interface{}{})
+	Init("MANNAIAH", map[string]interface{}{})
 
 	assert.Panics(t, func() {
-		_ = config.MustGet("missing.key")
+		_ = MustGet("missing.key")
 	}, "expected panic for missing key")
 }
 
@@ -63,11 +61,11 @@ func TestDynamicEnvChange(t *testing.T) {
 
 	_ = os.Setenv("MANNAIAH_DYNAMIC_KEY", "initial")
 
-	config.Init("MANNAIAH", map[string]interface{}{})
+	Init("MANNAIAH", map[string]interface{}{})
 
-	assert.Equal(t, "initial", config.Get().GetString("dynamic.key"))
+	assert.Equal(t, "initial", Get().GetString("dynamic.key"))
 
 	_ = os.Setenv("MANNAIAH_DYNAMIC_KEY", "updated")
 
-	assert.Equal(t, "updated", config.Get().GetString("dynamic.key"))
+	assert.Equal(t, "updated", Get().GetString("dynamic.key"))
 }

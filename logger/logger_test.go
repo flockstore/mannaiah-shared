@@ -1,4 +1,3 @@
-// Package logger provides tests for the shared logger configuration.
 package logger
 
 import (

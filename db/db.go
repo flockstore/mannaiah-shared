@@ -1,4 +1,3 @@
-// Package db provides a reusable GORM connector with Zap integration via zapgorm2.
 package db
 
 import (
