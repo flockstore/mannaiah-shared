@@ -10,3 +10,9 @@ var (
 	LogLevelCaller = "LOG_CALLER"
 	LogLevelStack  = "LOG_STACK"
 )
+
+// Environment definitions for database
+var (
+	DatabaseDialect = "DB_DIALECT"
+	DatabaseDSN     = "DB_DSN"
+)

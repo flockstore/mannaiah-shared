@@ -4,7 +4,7 @@ import (
 	"github.com/flockstore/mannaiah-shared/config"
 )
 
-// SetupEnvironmentLogger creates a logger from environment variables.
+// SetupEnvironmentLogger creates a logger from environment variables
 func SetupEnvironmentLogger() {
 
 	env := config.MustGet(config.Env)

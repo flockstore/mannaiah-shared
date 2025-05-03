@@ -7,11 +7,17 @@ import (
 // SetDefaults provide a map for default config mappings
 func SetDefaults() map[string]interface{} {
 	def := make(map[string]interface{}, 1)
+
 	def[Env] = "development"
+
 	def[LogLevel] = "debug"
 	def[LogLevelFormat] = "json"
 	def[LogLevelCaller] = true
 	def[LogLevelStack] = true
+
+	def[DatabaseDialect] = "mysql"
+	def[DatabaseDSN] = "root:secret@tcp(127.0.0.1:3306)/mannaiah?parseTime=true"
+
 	return def
 }
 
