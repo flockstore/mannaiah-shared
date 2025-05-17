@@ -16,3 +16,9 @@ var (
 	DatabaseDialect = "DB_DIALECT"
 	DatabaseDSN     = "DB_DSN"
 )
+
+// Environment definitions for http
+var (
+	HttpServer = "HTTP_SERVER"
+	HttpPort   = "HTTP_pORT"
+)

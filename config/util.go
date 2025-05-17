@@ -18,6 +18,9 @@ func SetDefaults() map[string]interface{} {
 	def[DatabaseDialect] = "mysql"
 	def[DatabaseDSN] = "root:secret@tcp(127.0.0.1:3306)/mannaiah?parseTime=true"
 
+	def[HttpServer] = "0.0.0.0"
+	def[HttpPort] = "3000"
+
 	return def
 }
 
