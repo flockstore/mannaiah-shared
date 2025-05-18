@@ -2,6 +2,7 @@ package fiber
 
 import (
 	"github.com/flockstore/mannaiah-shared/endpoint"
+	"github.com/flockstore/mannaiah-shared/transport"
 	"github.com/go-playground/validator/v10"
 	"github.com/gofiber/fiber/v2"
 	"gorm.io/gorm"
@@ -13,7 +14,8 @@ var validate = validator.New()
 func EncodeResponse[T any](c *fiber.Ctx, resp endpoint.Response[T]) error {
 
 	if resp.Err != nil {
-		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{
+		code := transport.CodeOf(resp.Err)
+		return c.Status(code).JSON(fiber.Map{
 			"error": resp.Err.Error(),
 		})
 	}
