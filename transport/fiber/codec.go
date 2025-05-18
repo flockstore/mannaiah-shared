@@ -2,35 +2,52 @@ package fiber
 
 import (
 	"github.com/flockstore/mannaiah-shared/endpoint"
+	"github.com/go-playground/validator/v10"
 	"github.com/gofiber/fiber/v2"
 	"gorm.io/gorm"
 )
 
+var validate = validator.New()
+
 // EncodeResponse writes a generic response as JSON, handling errors if present.
 func EncodeResponse[T any](c *fiber.Ctx, resp endpoint.Response[T]) error {
+
 	if resp.Err != nil {
 		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{
 			"error": resp.Err.Error(),
 		})
 	}
+
 	return c.JSON(resp.Data)
 }
 
 // DecodeCreateRequest decodes a JSON body into a CreateRequest[T].
 func DecodeCreateRequest[T any](c *fiber.Ctx) (endpoint.CreateRequest[T], error) {
 	var model T
+
 	if err := c.BodyParser(&model); err != nil {
 		return endpoint.CreateRequest[T]{}, err
 	}
+
+	if err := validate.Struct(model); err != nil {
+		return endpoint.CreateRequest[T]{}, fiber.NewError(fiber.StatusBadRequest, "Provided body is invalid: "+err.Error())
+	}
+
 	return endpoint.CreateRequest[T]{Model: &model}, nil
 }
 
 // DecodeUpdateRequest decodes a JSON body into an UpdateRequest[T].
 func DecodeUpdateRequest[T any](c *fiber.Ctx) (endpoint.UpdateRequest[T], error) {
 	var model T
+
 	if err := c.BodyParser(&model); err != nil {
 		return endpoint.UpdateRequest[T]{}, err
 	}
+
+	if err := validate.Struct(model); err != nil {
+		return endpoint.UpdateRequest[T]{}, fiber.NewError(fiber.StatusBadRequest, "Provided body is invalid: "+err.Error())
+	}
+
 	return endpoint.UpdateRequest[T]{Model: &model}, nil
 }
 
